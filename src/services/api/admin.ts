@@ -9,7 +9,7 @@ export async function fetchAdmins(token: string): Promise<AdminUser[]> {
   return res.json();
 }
 
-export async function createAdmin(data: { username: string; password?: string }, token: string): Promise<AdminUser> {
+export async function createAdmin(data: { username: string; password?: string; role?: string }, token: string): Promise<AdminUser> {
   const res = await fetch(`${BASE_URL}/admins`, {
     method: 'POST',
     headers: {
@@ -25,7 +25,7 @@ export async function createAdmin(data: { username: string; password?: string },
   return res.json();
 }
 
-export async function updateAdmin(id: string, data: { username: string; password?: string }, token: string): Promise<AdminUser> {
+export async function updateAdmin(id: string, data: { username: string; password?: string; role?: string }, token: string): Promise<AdminUser> {
   const res = await fetch(`${BASE_URL}/admins/${id}`, {
     method: 'PUT',
     headers: {

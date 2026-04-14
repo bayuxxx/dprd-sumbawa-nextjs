@@ -5,7 +5,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const limit = parseInt(searchParams.get('limit') || '6');
 
-  const items = beholdData.posts.slice(0, limit * 2).filter((post: any) => !post.isReel).slice(0, limit).map((post: any) => ({
+  const items = beholdData.posts.slice(0, limit).map((post: any) => ({
     id: post.id,
     caption: post.prunedCaption || post.caption || '',
     mediaType: post.mediaType,

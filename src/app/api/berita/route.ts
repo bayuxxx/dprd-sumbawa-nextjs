@@ -14,19 +14,21 @@ export async function GET(req: NextRequest) {
   const category = searchParams.get('category');
   const isPublished = searchParams.get('isPublished');
   const search = searchParams.get('search');
+  const reviewStatus = searchParams.get('reviewStatus');
 
   const conditions: string[] = [];
   const params: any[] = [];
 
   if (category) { conditions.push('category = ?'); params.push(category); }
   if (isPublished !== null) { conditions.push('isPublished = ?'); params.push(isPublished === 'true' ? 1 : 0); }
+  if (reviewStatus) { conditions.push('reviewStatus = ?'); params.push(reviewStatus); }
   if (search) { conditions.push('(title LIKE ? OR excerpt LIKE ? OR content LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
 
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
   const [countRows]: any = await db.query(`SELECT COUNT(*) as total FROM beritas ${where}`, params);
   const total = countRows[0].total;
 
-  let sql = `SELECT * FROM beritas ${where} ORDER BY publishedAt DESC`;
+  let sql = `SELECT b.*, a.username as authorName FROM beritas b LEFT JOIN admins a ON b.authorId = a.id ${where} ORDER BY b.publishedAt DESC`;
   const queryParams = [...params];
   if (limit) { sql += ' LIMIT ?'; queryParams.push(parseInt(limit)); }
   if (page && limit) { sql += ' OFFSET ?'; queryParams.push((parseInt(page) - 1) * parseInt(limit)); }
@@ -55,16 +57,25 @@ export async function POST(req: NextRequest) {
     const excerpt = formData.get('excerpt') as string;
     const content = formData.get('content') as string;
     const category = formData.get('category') as string;
-    const isPublished = formData.get('isPublished') as string;
     const publishedAt = formData.get('publishedAt') as string;
+
+    // news_editor: always draft + pending review
+    // admin & super_admin: can set isPublished directly
+    let isPublished = 0;
+    let reviewStatus = 'pending';
+    if (auth.role === 'super_admin' || auth.role === 'admin') {
+      const isPublishedParam = formData.get('isPublished') as string;
+      isPublished = isPublishedParam === 'true' ? 1 : 0;
+      reviewStatus = isPublished ? 'approved' : 'pending';
+    }
 
     const id = crypto.randomUUID().replace(/-/g, '').substring(0, 25);
     const now = new Date();
     const pubDate = publishedAt ? new Date(publishedAt) : now;
 
     await db.query(
-      'INSERT INTO beritas (id, title, slug, excerpt, content, imageUrl, category, isPublished, publishedAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, title, slug, excerpt || null, content || null, imageUrl, category || 'Berita Dewan', isPublished === 'false' ? 0 : 1, pubDate, now, now]
+      'INSERT INTO beritas (id, title, slug, excerpt, content, imageUrl, category, isPublished, authorId, reviewStatus, publishedAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, title, slug, excerpt || null, content || null, imageUrl, category || 'Berita Dewan', isPublished, auth.adminId, reviewStatus, pubDate, now, now]
     );
     const [rows]: any = await db.query('SELECT * FROM beritas WHERE id = ?', [id]);
     return NextResponse.json(rows[0], { status: 201 });

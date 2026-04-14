@@ -27,17 +27,21 @@ model Banner {
 }
 
 model Berita {
-  id          String   @id @default(cuid())
-  title       String
-  slug        String   @unique
-  excerpt     String?  @db.Text
-  content     String?  @db.LongText
-  imageUrl    String?  @db.Text
-  category    String   @default("Berita Dewan")
-  isPublished Boolean  @default(true)
-  publishedAt DateTime @default(now())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  title         String
+  slug          String   @unique
+  excerpt       String?  @db.Text
+  content       String?  @db.LongText
+  imageUrl      String?  @db.Text
+  category      String   @default("Berita Dewan")
+  isPublished   Boolean  @default(false)
+  authorId      String?  // adminId yang membuat
+  reviewStatus  String   @default("pending") // "pending" | "approved" | "rejected"
+  reviewedBy    String?  // adminId yang approve/reject
+  reviewNote    String?  @db.Text
+  publishedAt   DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@map("beritas")
 }
@@ -281,13 +285,29 @@ model AnggotaFraksi {
 }
 
 model Admin {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  username     String   @unique
+  password     String
+  role         String   @default("super_admin") // "super_admin" | "news_editor"
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("admins")
+}
+
+model KomentarBerita {
+  id          String   @id @default(cuid())
+  beritaId    String
+  nama        String
+  email       String?
+  isi         String   @db.Text
+  status      String   @default("pending") // "pending" | "approved" | "rejected"
+  reviewedBy  String?  // adminId yang approve/reject
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("komentar_berita")
 }
 
 model Propemperda {
@@ -329,4 +349,43 @@ model Podcast {
   updatedAt    DateTime @updatedAt
 
   @@map("podcasts")
+}
+
+model EMagazine {
+  id        String   @id @default(cuid())
+  title     String
+  edisi     String
+  imageUrl  String?  @db.Text
+  fileUrl   String?  @db.Text
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("emagazines")
+}
+
+model InfoPublik {
+  id        String   @id @default(cuid())
+  title     String
+  icon      String   @default("📄")
+  url       String   @db.Text
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("info_publik")
+}
+
+model Tautan {
+  id        String   @id @default(cuid())
+  title     String
+  url       String   @db.Text
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tautans")
 }

@@ -1,20 +1,16 @@
 'use client';
-import React from 'react';
-import { MessageSquare } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { MessageSquare, ExternalLink } from 'lucide-react';
+
+interface Tautan { id: string; title: string; url: string; }
 
 const AgendaForumTautan: React.FC = () => {
-    // Dummy calendar generator for UX
     const daysArray = Array.from({ length: 31 }, (_, i) => i + 1);
+    const [tautans, setTautans] = useState<Tautan[]>([]);
 
-    const tautans = [
-        "e-Gov", "JDIH", "PPID", "LHKPN", "REKRUTMEN", "SIMPEG"
-    ];
-
-    const logos = [
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Garuda_Pancasila_Logo.svg/100px-Garuda_Pancasila_Logo.svg.png",
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/KPU_Logo.svg/100px-KPU_Logo.svg.png",
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Bawaslu_Logo.png/100px-Bawaslu_Logo.png",
-    ];
+    useEffect(() => {
+        fetch('/api/tautan').then(r => r.json()).then(data => setTautans(Array.isArray(data) ? data.filter((t: any) => t.isActive) : [])).catch(() => {});
+    }, []);
 
     return (
         <section className="bg-white py-12 w-full border-t border-gray-100">
@@ -85,25 +81,22 @@ const AgendaForumTautan: React.FC = () => {
                         </div>
 
                         <div className="flex flex-col border border-gray-200 rounded-sm shadow-sm bg-gray-50/50 divide-y divide-gray-100">
-                            {tautans.map((t, idx) => (
-                                <div key={idx} className="w-full flex justify-between items-center p-3 px-4 hover:bg-white cursor-pointer transition-colors group">
-                                    <span className="text-sm font-bold text-gray-800 group-hover:text-red-600 transition-colors">{t}</span>
-                                    <span className="text-gray-400 group-hover:text-red-600 font-bold">+</span>
-                                </div>
-                            ))}
+                            {tautans.length === 0
+                                ? Array(4).fill(0).map((_, i) => <div key={i} className="h-12 bg-gray-50 animate-pulse" />)
+                                : tautans.map(t => (
+                                    <a key={t.id} href={t.url} target="_blank" rel="noreferrer"
+                                        className="w-full flex justify-between items-center p-3 px-4 hover:bg-white cursor-pointer transition-colors group">
+                                        <span className="text-sm font-bold text-gray-800 group-hover:text-red-600 transition-colors">{t.title}</span>
+                                        <ExternalLink size={13} className="text-gray-400 group-hover:text-red-600 transition-colors" />
+                                    </a>
+                                ))
+                            }
                         </div>
                     </div>
 
                 </div>
 
-                {/* Additional bottom logos strip */}
-                <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end">
-                    <div className="flex gap-4 items-center flex-wrap opacity-60 hover:opacity-100 transition-opacity justify-end w-full">
-                        {logos.map((l, i) => (
-                            <img src={l} key={i} className="h-10 grayscale hover:grayscale-0 transition-all cursor-pointer" alt="Logo" />
-                        ))}
-                    </div>
-                </div>
+                {/* Bottom logos strip — hapus karena data sudah dinamis */}
             </div>
         </section>
     );

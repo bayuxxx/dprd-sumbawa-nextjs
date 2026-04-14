@@ -15,12 +15,19 @@ export async function POST(req: NextRequest) {
     const isValid = await bcrypt.compare(password, admin.password);
     if (!isValid) return NextResponse.json({ message: 'Username atau password salah.' }, { status: 401 });
 
+    // Update last login
+    await db.query('UPDATE admins SET lastLoginAt = ? WHERE id = ?', [new Date(), admin.id]);
+
+    const role = admin.role ?? 'super_admin';
     const token = jwt.sign(
-      { adminId: admin.id, username: admin.username },
+      { adminId: admin.id, username: admin.username, role },
       process.env.JWT_SECRET!,
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
     );
-    return NextResponse.json({ token, admin: { id: admin.id, username: admin.username } });
+    return NextResponse.json({
+      token,
+      admin: { id: admin.id, username: admin.username, role },
+    });
   } catch (error: any) {
     return NextResponse.json({ message: error.message || 'Terjadi kesalahan.' }, { status: 500 });
   }

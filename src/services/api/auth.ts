@@ -3,6 +3,8 @@ import { BASE_URL } from './config';
 export interface AdminUser {
   id: string;
   username: string;
+  role?: string;
+  lastLoginAt?: string;
 }
 
 export async function loginAdmin(username: string, password: string): Promise<{ token: string; admin: AdminUser }> {
