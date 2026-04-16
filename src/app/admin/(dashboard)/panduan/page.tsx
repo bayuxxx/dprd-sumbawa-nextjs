@@ -59,7 +59,7 @@ export default function PanduanPage() {
                 <Row label="Resolusi Ideal" value="1920 × 600 px" note="Minimum 1280 × 400 px agar tidak pecah" />
                 <Row label="Rasio Mobile" value="4:3" note="Di layar kecil otomatis berubah ke rasio 4:3" />
                 <Row label="Format File" value="JPG / JPEG" note="Gunakan JPG untuk foto, hindari PNG besar" />
-                <Row label="Ukuran File" value="Maks. 2 MB" note="Kompres dulu di tinypng.com atau squoosh.app" />
+                <Row label="Ukuran File" value="Maks. 15 MB" note="Sistem mendukung hingga 15MB per file" />
                 <Row label="Fokus Gambar" value="Tengah horizontal" note="Bagian atas/bawah bisa terpotong di mobile" />
                 <Tip type="info">
                     Gunakan foto landscape (horizontal) dengan subjek utama di tengah. Hindari teks penting di tepi gambar karena bisa terpotong.
@@ -74,7 +74,7 @@ export default function PanduanPage() {
                 <Row label="Rasio Aspek" value="3:4" note="Portrait / tegak — seperti foto KTP atau pas foto" />
                 <Row label="Resolusi Ideal" value="600 × 800 px" note="Minimum 300 × 400 px" />
                 <Row label="Format File" value="JPG / JPEG" note="PNG juga bisa tapi ukuran file lebih besar" />
-                <Row label="Ukuran File" value="Maks. 1 MB" note="Kompres jika lebih besar" />
+                <Row label="Ukuran File" value="Maks. 15 MB" note="Kompres jika lebih besar" />
                 <Row label="Posisi Wajah" value="Atas (object-top)" note="Sistem otomatis crop dari atas, pastikan wajah di bagian atas foto" />
                 <Row label="Latar Belakang" value="Polos / formal" note="Disarankan latar merah, biru, atau putih sesuai seragam dinas" />
                 <Tip type="info">
@@ -91,7 +91,7 @@ export default function PanduanPage() {
                 <Row label="Rasio Mobile" value="1:1 (square)" note="Di layar kecil card berubah ke rasio kotak" />
                 <Row label="Resolusi Ideal" value="1200 × 675 px" note="Minimum 800 × 450 px" />
                 <Row label="Format File" value="JPG / JPEG" note="Hindari PNG untuk foto berita" />
-                <Row label="Ukuran File" value="Maks. 1.5 MB" note="Kompres sebelum upload" />
+                <Row label="Ukuran File" value="Maks. 15 MB" note="Kompres sebelum upload" />
                 <Row label="Fokus Gambar" value="Tengah" note="Bagian tepi bisa terpotong di tampilan mobile (square)" />
                 <Tip type="info">
                     Thumbnail ditampilkan 16:9 di desktop dan 1:1 di mobile. Pastikan subjek utama berada di tengah gambar.
@@ -132,10 +132,10 @@ export default function PanduanPage() {
                         </thead>
                         <tbody>
                             {[
-                                { jenis: 'Banner Hero', rasio: '16:5', resolusi: '1920 × 600 px', maks: '2 MB' },
-                                { jenis: 'Foto Anggota AKD', rasio: '3:4', resolusi: '600 × 800 px', maks: '1 MB' },
-                                { jenis: 'Thumbnail Berita', rasio: '16:9', resolusi: '1200 × 675 px', maks: '1.5 MB' },
-                                { jenis: 'Foto Fraksi/Sekretariat', rasio: '3:4', resolusi: '600 × 800 px', maks: '1 MB' },
+                                { jenis: 'Banner Hero', rasio: '16:5', resolusi: '1920 × 600 px', maks: '15 MB' },
+                                { jenis: 'Foto Anggota AKD', rasio: '3:4', resolusi: '600 × 800 px', maks: '15 MB' },
+                                { jenis: 'Thumbnail Berita', rasio: '16:9', resolusi: '1200 × 675 px', maks: '15 MB' },
+                                { jenis: 'Foto Fraksi/Sekretariat', rasio: '3:4', resolusi: '600 × 800 px', maks: '15 MB' },
                             ].map((row) => (
                                 <tr key={row.jenis} className="border-b border-gray-50 last:border-0">
                                     <td className="py-3 pr-4 font-semibold text-gray-800">{row.jenis}</td>
@@ -148,7 +148,7 @@ export default function PanduanPage() {
                     </table>
                 </div>
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500">
-                    Kompres semua gambar sebelum upload di <a href="https://tinypng.com" target="_blank" rel="noreferrer" className="text-blue-600 font-semibold hover:underline">tinypng.com</a> atau <a href="https://squoosh.app" target="_blank" rel="noreferrer" className="text-blue-600 font-semibold hover:underline">squoosh.app</a> — gratis dan mudah digunakan.
+                    Jika file lebih daari 15 mb kompres sebelum upload di <a href="https://tinypng.com" target="_blank" rel="noreferrer" className="text-blue-600 font-semibold hover:underline">tinypng.com</a> atau <a href="https://squoosh.app" target="_blank" rel="noreferrer" className="text-blue-600 font-semibold hover:underline">squoosh.app</a> — gratis dan mudah digunakan.
                 </div>
             </div>
         </div>

@@ -10,6 +10,7 @@ const BeritaPage: React.FC = () => {
     const searchParams = useSearchParams();
     const router = useRouter();
     const queryParam = searchParams.get('q') ?? '';
+    const kategoriParam = searchParams.get('kategori') ?? '';
 
     const [beritaList, setBeritaList] = useState<Berita[]>([]);
     const [total, setTotal] = useState(0);
@@ -19,24 +20,28 @@ const BeritaPage: React.FC = () => {
     const [searchInput, setSearchInput] = useState(queryParam);
     const limit = 8;
 
-    // Reset page when query changes
+    // Reset page when query/kategori changes
     useEffect(() => {
         setPage(1);
         setSearchInput(queryParam);
-    }, [queryParam]);
+    }, [queryParam, kategoriParam]);
 
     useEffect(() => {
         setLoading(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
         Promise.all([
-            fetchBerita({ limit, page, isPublished: true, ...(queryParam ? { search: queryParam } : {}) }),
+            fetchBerita({
+                limit, page, isPublished: true,
+                ...(queryParam ? { search: queryParam } : {}),
+                ...(kategoriParam ? { category: kategoriParam } : {}),
+            }),
             fetchBerita({ limit: 6, page: 1, isPublished: true }),
         ]).then(([mainRes, latestRes]) => {
             setBeritaList(mainRes.data);
             setTotal(mainRes.total);
             setLatestNews(latestRes.data);
         }).finally(() => setLoading(false));
-    }, [page, queryParam]);
+    }, [page, queryParam, kategoriParam]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -117,9 +122,17 @@ const BeritaPage: React.FC = () => {
                     <section className="flex-1 w-full">
                         <div className="mb-10 flex flex-col">
                             <h1 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
-                                {queryParam ? `Hasil: "${queryParam}"` : 'Arsip Berita'}
+                                {queryParam ? `Hasil: "${queryParam}"` : kategoriParam ? kategoriParam : 'Arsip Berita'}
                             </h1>
                             <div className="w-20 h-1.5 bg-red-600 mt-4 rounded-full"></div>
+                            {kategoriParam && (
+                                <button
+                                    onClick={() => router.push('/berita')}
+                                    className="mt-3 text-xs font-bold text-gray-400 hover:text-red-600 transition-colors w-fit"
+                                >
+                                    ← Semua Berita
+                                </button>
+                            )}
                         </div>
 
                         {/* Search bar inline */}

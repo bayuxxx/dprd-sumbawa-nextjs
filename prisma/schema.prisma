@@ -389,3 +389,40 @@ model Tautan {
 
   @@map("tautans")
 }
+
+model Agenda {
+  id        String   @id @default(cuid())
+  title     String
+  tanggal   DateTime
+  waktu     String   @default("09.00 WITA")
+  lokasi    String
+  category  String   @default("Kegiatan")
+  color     String   @default("#1a6bb5")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("agendas")
+}
+
+model RaperdaLuar {
+  id         String   @id @default(cuid())
+  judul      String   @db.Text
+  status     String   @default("Belum Pembahasan")
+  keterangan String?  @db.Text
+  tahun      String
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("raperda_luar")
+}
+
+model PpidAsset {
+  id        String   @id @default(cuid())
+  slug      String   @unique // "struktur-organisasi" | "maklumat-pelayanan"
+  imageUrl  String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("ppid_assets")
+}

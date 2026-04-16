@@ -6,7 +6,6 @@
 
 const { execSync } = require('child_process');
 const fs = require('fs');
-const path = require('path');
 
 const OUTPUT = 'deploy.zip';
 
@@ -14,24 +13,9 @@ if (fs.existsSync(OUTPUT)) fs.unlinkSync(OUTPUT);
 
 console.log('📦 Packing deploy.zip (tanpa cache dev)...');
 
-// Zip .next tapi exclude folder yang tidak perlu
-const excludes = [
-  '.next/dev',
-  '.next/cache',
-  '.next/trace-build',
-  '.next/turbopack',
-  '.next/diagnostics',
-  'node_modules',
-  'src',
-  '.git',
-  'deploy.zip',
-  '*.log',
-].map(e => `-x "${e}/*"`).join(' ');
-
 const cmd = `powershell Compress-Archive -Path .next,public,package.json,package-lock.json,next.config.ts,server.js,node_modules -DestinationPath ${OUTPUT} -Force`;
 
 try {
-  // Pakai 7zip kalau ada, lebih bisa exclude
   const has7z = (() => {
     try { execSync('"C:\\Program Files\\7-Zip\\7z.exe" i', { stdio: 'ignore' }); return true; } catch {}
     try { execSync('7z i', { stdio: 'ignore' }); return true; } catch {}
@@ -57,7 +41,6 @@ try {
       { stdio: 'inherit' }
     );
   } else {
-    // Fallback: hapus dulu folder dev sementara, zip, restore
     console.log('⚠️  7zip tidak ditemukan, menggunakan PowerShell (lebih lambat)...');
 
     const tempRename = [];
@@ -73,7 +56,6 @@ try {
 
     execSync(cmd, { stdio: 'inherit' });
 
-    // Restore
     tempRename.forEach(({ from, to }) => fs.renameSync(from, to));
   }
 
@@ -84,8 +66,7 @@ try {
   console.log('2. Extract di folder aplikasi');
   console.log('3. Upload .env.local secara manual');
   console.log('4. Upload folder uploads/ jika ada gambar');
-  console.log('5. Di cPanel Terminal: npm install --omit=dev');
-  console.log('6. Restart app di cPanel Node.js');
+  console.log('5. Restart app di cPanel Node.js');
 } catch (e) {
   console.error('❌ Gagal:', e.message);
 }

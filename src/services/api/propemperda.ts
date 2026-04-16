@@ -88,3 +88,49 @@ export async function deleteRaperda(id: string, token: string): Promise<void> {
   });
   if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Gagal hapus raperda'); }
 }
+
+// ─── Raperda Luar Propemperda ───
+
+export interface RaperdaLuar {
+  id: string;
+  judul: string;
+  status: 'Selesai Pembahasan' | 'Proses Pembahasan' | 'Belum Pembahasan';
+  keterangan: string | null;
+  tahun: string;
+  order: number;
+}
+
+export async function fetchRaperdaLuar(tahun?: string): Promise<RaperdaLuar[]> {
+  const url = tahun ? `${BASE_URL}/raperda-luar?tahun=${tahun}` : `${BASE_URL}/raperda-luar`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function createRaperdaLuar(data: { judul: string; status: string; keterangan?: string; tahun: string; order?: number }, token: string): Promise<RaperdaLuar> {
+  const res = await fetch(`${BASE_URL}/raperda-luar`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Gagal membuat'); }
+  return res.json();
+}
+
+export async function updateRaperdaLuar(id: string, data: Partial<RaperdaLuar>, token: string): Promise<RaperdaLuar> {
+  const res = await fetch(`${BASE_URL}/raperda-luar/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Gagal update'); }
+  return res.json();
+}
+
+export async function deleteRaperdaLuar(id: string, token: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}/raperda-luar/${id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'Gagal hapus'); }
+}

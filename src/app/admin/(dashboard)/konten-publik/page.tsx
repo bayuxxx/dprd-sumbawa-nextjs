@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState, useCallback } from 'react';
-import { Plus, Edit2, Trash2, X, Save, ExternalLink, BookOpen, Link2, Info } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Save, BookOpen, Link2, Info } from 'lucide-react';
+import EmojiPicker from '../../../../components/EmojiPicker';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface Magazine { id: string; title: string; edisi: string; imageUrl: string | null; fileUrl: string | null; isActive: boolean; order: number; }
@@ -94,7 +95,7 @@ function SimpleListSection<T extends { id: string; title: string; url: string; i
                             {extraField && (
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">{extraField.label}</label>
-                                    <input type="text" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder={extraField.placeholder} value={form[extraField.key] || ''} onChange={e => setForm({ ...form, [extraField.key]: e.target.value })} />
+                                    <EmojiPicker value={form[extraField.key] || '📄'} onChange={emoji => setForm({ ...form, [extraField.key]: emoji })} />
                                 </div>
                             )}
                             <div>
@@ -108,7 +109,7 @@ function SimpleListSection<T extends { id: string; title: string; url: string; i
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Urutan</label>
-                                    <input type="number" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none" value={form.order} onChange={e => setForm({ ...form, order: parseInt(e.target.value) })} />
+                                    <input type="number" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none" value={form.order} onChange={e => setForm({ ...form, order: parseInt(e.target.value) || 0 })} />
                                 </div>
                                 <div className="flex items-end pb-1">
                                     <label className="flex items-center gap-2 cursor-pointer">
@@ -252,7 +253,7 @@ function EMagazineSection() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Urutan</label>
-                                    <input type="number" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none" value={form.order} onChange={e => setForm({ ...form, order: parseInt(e.target.value) })} />
+                                    <input type="number" className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none" value={form.order} onChange={e => setForm({ ...form, order: parseInt(e.target.value) || 0 })} />
                                 </div>
                                 <div className="flex items-end pb-1">
                                     <label className="flex items-center gap-2 cursor-pointer">

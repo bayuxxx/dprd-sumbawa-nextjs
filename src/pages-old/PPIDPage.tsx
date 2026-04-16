@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -12,11 +12,35 @@ const ppidMenu = [
     { slug: 'data-anggaran', title: 'Data Anggaran' },
 ];
 
+const DYNAMIC_IMAGE_SLUGS = ['struktur-organisasi', 'maklumat-pelayanan'];
+
+const ExternalBtn: React.FC<{ href: string; label: string }> = ({ href, label }) => (
+    <a href={href} target="_blank" rel="noopener noreferrer"
+        className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-3 rounded-xl transition-colors shadow-lg shadow-red-600/20">
+        {label}
+        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </a>
+);
+
 const PPIDPage: React.FC = () => {
     const { slug, section } = useParams<{ slug?: string; section?: string }>();
     const activeSlug = slug || section || 'profil';
-
     const activeMenuTitle = ppidMenu.find(m => m.slug === activeSlug)?.title || 'Profil PPID';
+
+    const [imageUrls, setImageUrls] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        // Fetch semua asset PPID sekaligus
+        fetch('/api/ppid/assets')
+            .then(r => r.json())
+            .then((data: any[]) => {
+                if (!Array.isArray(data)) return;
+                const map: Record<string, string> = {};
+                data.forEach(a => { if (a?.slug && a?.imageUrl) map[a.slug] = a.imageUrl; });
+                setImageUrls(map);
+            })
+            .catch(() => {});
+    }, []);
 
     return (
         <main className="min-h-screen bg-[#fcfcfc] py-12 md:py-20">
@@ -90,20 +114,26 @@ const PPIDPage: React.FC = () => {
 
                         ) : activeSlug === 'struktur-organisasi' ? (
                             <div>
-                                <img
-                                    src="/struktur-organisasi.png"
-                                    alt="Struktur Organisasi PPID DPRD Kabupaten Sumbawa Barat"
-                                    className="w-full rounded-xl border border-gray-100 shadow-sm"
-                                />
+                                {imageUrls['struktur-organisasi'] ? (
+                                    <img src={imageUrls['struktur-organisasi']} alt="Struktur Organisasi PPID DPRD Kabupaten Sumbawa Barat" className="w-full rounded-xl border border-gray-100 shadow-sm" />
+                                ) : (
+                                    <div className="py-16 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        <p className="text-gray-400 font-medium">Gambar belum tersedia</p>
+                                        <p className="text-gray-300 text-sm mt-1">Upload melalui Admin → PPID</p>
+                                    </div>
+                                )}
                             </div>
 
                         ) : activeSlug === 'maklumat-pelayanan' ? (
                             <div>
-                                <img
-                                    src="/maklumat-pelayanan.png"
-                                    alt="Maklumat Pelayanan PPID DPRD Kabupaten Sumbawa Barat"
-                                    className="w-full rounded-xl border border-gray-100 shadow-sm"
-                                />
+                                {imageUrls['maklumat-pelayanan'] ? (
+                                    <img src={imageUrls['maklumat-pelayanan']} alt="Maklumat Pelayanan PPID DPRD Kabupaten Sumbawa Barat" className="w-full rounded-xl border border-gray-100 shadow-sm" />
+                                ) : (
+                                    <div className="py-16 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                        <p className="text-gray-400 font-medium">Gambar belum tersedia</p>
+                                        <p className="text-gray-300 text-sm mt-1">Upload melalui Admin → PPID</p>
+                                    </div>
+                                )}
                             </div>
 
                         ) : activeSlug === 'formulir-permohonan' ? (

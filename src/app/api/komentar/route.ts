@@ -22,9 +22,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { beritaId, nama, email, isi } = await req.json();
-    if (!beritaId || !nama?.trim() || !isi?.trim()) {
-      return NextResponse.json({ message: 'beritaId, nama, dan isi komentar diperlukan.' }, { status: 400 });
+    if (!beritaId || !isi?.trim()) {
+      return NextResponse.json({ message: 'beritaId dan isi komentar diperlukan.' }, { status: 400 });
     }
+    const displayNama = nama?.trim() || 'Anonim';
 
     // Verify berita exists and is published
     const [beritaRows]: any = await db.query('SELECT id FROM beritas WHERE id = ? AND isPublished = 1', [beritaId]);
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     await db.query(
       'INSERT INTO komentar_berita (id, beritaId, nama, email, isi, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, beritaId, nama.trim(), email?.trim() || null, isi.trim(), 'pending', now, now]
+      [id, beritaId, displayNama, email?.trim() || null, isi.trim(), 'pending', now, now]
     );
 
     return NextResponse.json({ message: 'Komentar berhasil dikirim dan menunggu moderasi.' }, { status: 201 });

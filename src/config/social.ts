@@ -1,5 +1,5 @@
 export const socialConfig = {
-    facebook: "https://www.facebook.com/profile.php?id=100064560376189", // Placeholder / adjust if known
+    facebook: "https://www.facebook.com/profile.php/?id=61580585004708", // Placeholder / adjust if known
     instagram: "https://www.instagram.com/dprdsumbawabaratkab", // Based on common naming
     youtube: "https://www.youtube.com/@humas.dprdksb", // Adjust based on search
     twitter: "https://twitter.com/dprdksb",

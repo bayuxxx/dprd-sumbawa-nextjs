@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic';
 
 const RichTextEditor = dynamic(() => import('../../components/RichTextEditor'), { ssr: false });
 
-const CATEGORIES = ['Berita Dewan', 'Wakil Kita', 'Forum Warga', 'Pengumuman', 'Agenda'];
+const CATEGORIES = ['Berita Dewan', 'Wakil Kita', 'Galeri Dewan', 'Galeri Sekretariat Dewan'];
 
 const emptyForm = {
     title: '',

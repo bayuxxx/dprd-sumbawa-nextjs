@@ -1,26 +1,23 @@
-/**
- * Parse multipart form data from NextRequest.
- * Next.js App Router supports req.formData() natively.
- */
-
 import { uploadToStorage } from './storage';
 
-/**
- * Process a file from FormData and upload to local storage
- */
+const MAX_SIZE_AUDIO = 50 * 1024 * 1024;  // 50MB untuk audio
+const MAX_SIZE_DEFAULT = 20 * 1024 * 1024; // 20MB untuk gambar & PDF
+
 export async function processFileUpload(
   file: File | null,
   folder: string
 ): Promise<string | null> {
   if (!file || !(file instanceof File) || file.size === 0) return null;
 
-  // Validate image
-  if (!file.type.startsWith('image/') && !file.type.startsWith('audio/')) {
-    throw new Error('Hanya file gambar atau audio yang diizinkan.');
+  const isAudio = file.type.startsWith('audio/');
+  const isImage = file.type.startsWith('image/');
+  const isPdf   = file.type === 'application/pdf';
+
+  if (!isImage && !isAudio && !isPdf) {
+    throw new Error('Hanya file gambar, PDF, atau audio yang diizinkan.');
   }
 
-  // Check size (5MB for images, 50MB for audio)
-  const maxSize = file.type.startsWith('audio/') ? 50 * 1024 * 1024 : 5 * 1024 * 1024;
+  const maxSize = isAudio ? MAX_SIZE_AUDIO : MAX_SIZE_DEFAULT;
   if (file.size > maxSize) {
     throw new Error(`Ukuran file terlalu besar. Maksimal ${maxSize / 1024 / 1024}MB.`);
   }
