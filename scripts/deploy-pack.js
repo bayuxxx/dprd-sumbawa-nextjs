@@ -4,6 +4,8 @@
  * Output: deploy.zip
  */
 
+    // "prisma": "^6.19.3",
+
 const { execSync } = require('child_process');
 const fs = require('fs');
 

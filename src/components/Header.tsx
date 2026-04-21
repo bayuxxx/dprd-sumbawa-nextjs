@@ -22,14 +22,6 @@ const navItems = [
     {
         label: 'Fraksi',
         href: '/fraksi',
-        children: [
-            { label: 'Fraksi Gerindra', href: '/fraksi/gerindra' },
-            { label: 'Fraksi Golkar', href: '/fraksi/golkar' },
-            { label: 'Fraksi PKB', href: '/fraksi/pkb' },
-            { label: 'Fraksi PKS', href: '/fraksi/pks' },
-            { label: 'Fraksi Demokrat', href: '/fraksi/demokrat' },
-            { label: 'Fraksi NasDem', href: '/fraksi/nasdem' },
-        ],
     },
     { label: 'Sekretariat DPRD', href: '/sekretariat' },
     {

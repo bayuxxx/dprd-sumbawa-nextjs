@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import {
     LayoutDashboard, Newspaper, Image, Users, LogOut, Shield,
     Menu, X, ChevronRight, Building2, UsersRound, BookOpen,
-    Palette, Mic, Scale, Info, MessageSquare, Globe, CalendarDays,
+    Palette, Mic, Scale, Info, MessageSquare, Globe, CalendarDays, MapPin,
 } from 'lucide-react';
 import type { AdminRole } from '@/lib/auth';
 
@@ -24,6 +24,7 @@ const NAV_BY_ROLE: Record<AdminRole, { path: string; label: string; icon: React.
         { path: '/admin/banggar', label: 'Badan Anggaran', icon: BookOpen },
         { path: '/admin/bk', label: 'Badan Kehormatan', icon: BookOpen },
         { path: '/admin/fraksi', label: 'Fraksi', icon: Palette },
+        { path: '/admin/dapil', label: 'Daerah Pemilihan', icon: MapPin },
         { path: '/admin/sekretariat', label: 'Sekretariat', icon: Building2 },
         { path: '/admin/podcast', label: 'Podcast', icon: Mic },
         { path: '/admin/silegda', label: 'Silegda', icon: Scale },

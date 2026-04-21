@@ -6,7 +6,7 @@ import { deleteFromStorage } from '@/lib/storage';
 
 async function getFraksiWithRelations(id: string) {
   const [rows]: any = await db.query(
-    'SELECT f.*, m.id as mj_id, m.periode FROM fraksi_info f LEFT JOIN masa_jabatan m ON f.masaJabatanId = m.id WHERE f.id = ?', [id]
+    'SELECT f.*, m.id as mj_id, m.periode FROM fraksi_info f LEFT JOIN masa_jabatan_fraksi m ON f.masaJabatanId = m.id WHERE f.id = ?', [id]
   );
   if (rows.length === 0) return null;
   const r = rows[0];
@@ -44,7 +44,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const now = new Date();
     await db.query(
       'UPDATE fraksi_info SET name = ?, shortName = ?, slug = ?, color = ?, kursi = ?, masaJabatanId = ?, deskripsi = ?, logoUrl = ?, isAktif = ?, `order` = ?, updatedAt = ? WHERE id = ?',
-      [name || existing.name, shortName || existing.shortName, slug || existing.slug, color || existing.color, kursi !== undefined ? parseInt(kursi) : existing.kursi, masaJabatanId !== undefined ? (masaJabatanId || null) : existing.masaJabatanId, deskripsi !== undefined ? deskripsi : existing.deskripsi, logoUrl, isAktif !== undefined ? (isAktif === 'true' ? 1 : 0) : existing.isAktif, order !== undefined ? parseInt(order) : existing.order, now, id]
+      [name || existing.name, shortName || existing.shortName, slug || existing.slug, color || existing.color, kursi ? parseInt(kursi) : existing.kursi, masaJabatanId !== null ? (masaJabatanId || null) : existing.masaJabatanId, deskripsi !== null ? deskripsi : existing.deskripsi, logoUrl, isAktif !== null ? (isAktif === 'true' ? 1 : 0) : existing.isAktif, order ? parseInt(order) : existing.order, now, id]
     );
     const updated = await getFraksiWithRelations(id);
     return NextResponse.json(updated);

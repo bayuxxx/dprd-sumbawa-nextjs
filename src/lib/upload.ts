@@ -12,9 +12,10 @@ export async function processFileUpload(
   const isAudio = file.type.startsWith('audio/');
   const isImage = file.type.startsWith('image/');
   const isPdf   = file.type === 'application/pdf';
+  const isExcel = file.type.includes('spreadsheet') || file.type.includes('excel') || file.name.match(/\.(xlsx?|xls)$/i);
 
-  if (!isImage && !isAudio && !isPdf) {
-    throw new Error('Hanya file gambar, PDF, atau audio yang diizinkan.');
+  if (!isImage && !isAudio && !isPdf && !isExcel) {
+    throw new Error('Hanya file gambar, PDF, Excel, atau audio yang diizinkan.');
   }
 
   const maxSize = isAudio ? MAX_SIZE_AUDIO : MAX_SIZE_DEFAULT;

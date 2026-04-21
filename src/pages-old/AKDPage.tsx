@@ -5,6 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { ChevronDown } from 'lucide-react';
 import { fetchMasaJabatan, fetchAllBamusInfo, fetchAllBapemperdaInfo, fetchAllBanggarInfo, fetchAllBKInfo, fetchAllKomisiInfo } from '../services/api';
 import type { MasaJabatan, BamusInfo, BapemperdaInfo, BanggarInfo, BKInfo, KomisiInfo } from '../services/api';
+import { fetchAllDapil } from '../services/api/dapil';
+import type { DaerahPemilihan } from '../services/api/dapil';
 
 // Split content components
 import PimpinanContent from './akd/PimpinanContent';
@@ -13,14 +15,13 @@ import BapemperdaContent from './akd/BapemperdaContent';
 import BanggarContent from './akd/BanggarContent';
 import BKContent from './akd/BKContent';
 import KomisiContent from './akd/KomisiContent';
+import DapilContent from './akd/DapilContent';
 
 export type Submenu = { key: string; title: string; isLabel?: boolean };
 type AkdMenu = { key: string; title: string; submenus?: Submenu[] };
 
 // Static akd menus
-const staticAkdMenus: AkdMenu[] = [
-    { key: 'dapil', title: 'Daerah Pemilihan' },
-];
+const staticAkdMenus: AkdMenu[] = [];
 
 const AKDPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -32,6 +33,7 @@ const AKDPage: React.FC = () => {
     const [banggarList, setBanggarList] = useState<BanggarInfo[]>([]);
     const [bkList, setBkList] = useState<BKInfo[]>([]);
     const [komisiList, setKomisiList] = useState<KomisiInfo[]>([]);
+    const [dapilList, setDapilList] = useState<DaerahPemilihan[]>([]);
     const [loadingMasa, setLoadingMasa] = useState(true);
 
     useEffect(() => {
@@ -41,14 +43,16 @@ const AKDPage: React.FC = () => {
             fetchAllBapemperdaInfo(),
             fetchAllBanggarInfo(),
             fetchAllBKInfo(),
-            fetchAllKomisiInfo()
-        ]).then(([masaData, bamusData, bapemperdaData, banggarData, bkData, komisiData]) => {
+            fetchAllKomisiInfo(),
+            fetchAllDapil(),
+        ]).then(([masaData, bamusData, bapemperdaData, banggarData, bkData, komisiData, dapilData]) => {
             setMasaJabatanList(masaData);
             setBamusList(bamusData);
             setBapemperdaList(bapemperdaData);
             setBanggarList(banggarData);
             setBkList(bkData);
             setKomisiList(komisiData);
+            setDapilList((dapilData as DaerahPemilihan[]));
             setLoadingMasa(false);
         });
     }, []);
@@ -115,6 +119,11 @@ const AKDPage: React.FC = () => {
 
     const komisiSubmenus = generateKomisiSubmenus();
 
+    const dapilSubmenus: Submenu[] = dapilList.map(d => ({
+        key: `dapil-${d.id}`,
+        title: d.nama,
+    }));
+
     const akdMenus: AkdMenu[] = [
         { key: 'pimpinan', title: 'Pimpinan DPRD', submenus: pimpinanSubmenus },
         { key: 'bamus', title: 'Badan Musyawarah', submenus: bamusSubmenus },
@@ -122,6 +131,7 @@ const AKDPage: React.FC = () => {
         { key: 'banggar', title: 'Badan Anggaran', submenus: banggarSubmenus },
         { key: 'bk', title: 'Badan Kehormatan', submenus: bkSubmenus },
         { key: 'komisi', title: 'Komisi', submenus: komisiSubmenus },
+        { key: 'dapil', title: 'Daerah Pemilihan', submenus: dapilSubmenus },
         ...staticAkdMenus,
     ];
 
@@ -134,6 +144,7 @@ const AKDPage: React.FC = () => {
         'bapemperda', ...bapemperdaSubmenus.map(s => s.key),
         'banggar', ...banggarSubmenus.map(s => s.key),
         'bk', ...bkSubmenus.map(s => s.key),
+        'dapil', ...dapilSubmenus.map(s => s.key),
         ...staticAkdMenus.map((m) => m.key),
     ];
 
@@ -203,6 +214,12 @@ const AKDPage: React.FC = () => {
         if (validSlug === 'komisi' || validSlug.startsWith('komisi-')) {
             const id = validSlug === 'komisi' ? undefined : validSlug.replace('komisi-', '');
             return <KomisiContent id={id} />;
+        }
+
+        // Dapil
+        if (validSlug === 'dapil' || validSlug.startsWith('dapil-')) {
+            const id = validSlug === 'dapil' ? undefined : validSlug.replace('dapil-', '');
+            return <DapilContent id={id} />;
         }
 
         // Generic placeholder for other AKD sections

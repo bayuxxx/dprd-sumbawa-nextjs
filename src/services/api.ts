@@ -16,3 +16,4 @@ export * from './api/komisi';
 export * from './api/fraksi';
 export * from './api/podcast';
 export * from './api/propemperda';
+export * from './api/dapil';

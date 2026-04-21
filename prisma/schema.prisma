@@ -57,7 +57,6 @@ model MasaJabatan {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
   pimpinan    Pimpinan[]
-  fraksiInfo  FraksiInfo[]
 
   @@map("masa_jabatan")
 }
@@ -250,13 +249,13 @@ model AnggotaSekretariat {
 
 model FraksiInfo {
   id          String          @id @default(cuid())
-  name        String          // e.g. "Fraksi Partai Gerakan Indonesia Raya"
-  shortName   String          // e.g. "Gerindra"
-  slug        String          @unique // e.g. "gerindra"
+  name        String
+  shortName   String
+  slug        String          @unique
   color         String          @default("#c8102e")
   kursi         Int             @default(0)
   masaJabatanId String?
-  masaJabatan   MasaJabatan?    @relation(fields: [masaJabatanId], references: [id], onDelete: SetNull)
+  masaJabatan   MasaJabatanFraksi? @relation(fields: [masaJabatanId], references: [id], onDelete: SetNull)
   deskripsi     String?         @db.Text
   logoUrl     String?           @db.Text
   isAktif     Boolean         @default(true)
@@ -425,4 +424,64 @@ model PpidAsset {
   updatedAt DateTime @updatedAt
 
   @@map("ppid_assets")
+}
+
+model PpidAnggaran {
+  id        String   @id @default(cuid())
+  title     String
+  fileUrl   String   @db.Text
+  fileType  String   @default("pdf") // "pdf" | "excel"
+  tahun     String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ppid_anggaran")
+}
+
+model MasaJabatanFraksi {
+  id           String      @id @default(cuid())
+  periode      String      @unique
+  tahunMulai   Int
+  tahunSelesai Int
+  isAktif      Boolean     @default(false)
+  keterangan   String?     @db.Text
+  order        Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  fraksiInfo   FraksiInfo[]
+
+  @@map("masa_jabatan_fraksi")
+}
+
+model DaerahPemilihan {
+  id          String   @id @default(cuid())
+  nama        String   // "Daerah Pemilihan 1" atau "Daerah Pemilihan Sumbawa Barat 1"
+  slug        String   @unique
+  wilayah     String?  @db.Text // "Kecamatan A, Kecamatan B, dst"
+  jumlahKursi Int      @default(0)
+  imageUrl    String?  @db.Text
+  deskripsi   String?  @db.Text
+  isAktif     Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  anggota     AnggotaDapil[]
+
+  @@map("daerah_pemilihan")
+}
+
+model AnggotaDapil {
+  id        String            @id @default(cuid())
+  name      String
+  partai    String?
+  imageUrl  String?           @db.Text
+  order     Int               @default(0)
+  dapilId   String?
+  dapil     DaerahPemilihan?  @relation(fields: [dapilId], references: [id], onDelete: SetNull)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@map("anggota_dapil")
 }

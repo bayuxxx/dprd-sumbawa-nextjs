@@ -2,6 +2,57 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { FileText, FileSpreadsheet, Download } from 'lucide-react';
+
+interface AnggaranItem { id: string; title: string; fileUrl: string; fileType: string; tahun: string; }
+
+function DataAnggaran() {
+    const [items, setItems] = useState<AnggaranItem[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch('/api/ppid/anggaran').then(r => r.json()).then(d => setItems(Array.isArray(d) ? d : [])).finally(() => setLoading(false));
+    }, []);
+
+    const byTahun = items.reduce((acc, i) => { if (!acc[i.tahun]) acc[i.tahun] = []; acc[i.tahun].push(i); return acc; }, {} as Record<string, AnggaranItem[]>);
+    const tahunList = Object.keys(byTahun).sort((a, b) => b.localeCompare(a));
+
+    if (loading) return <div className="space-y-3">{Array(4).fill(0).map((_, i) => <div key={i} className="h-14 bg-gray-100 rounded-xl animate-pulse" />)}</div>;
+
+    if (items.length === 0) return (
+        <div className="py-16 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+            <FileText size={36} className="mx-auto text-gray-300 mb-3" />
+            <p className="text-gray-400 font-medium">Belum ada data anggaran tersedia</p>
+        </div>
+    );
+
+    return (
+        <div className="space-y-8">
+            {tahunList.map(tahun => (
+                <div key={tahun}>
+                    <h2 className="font-black text-gray-800 text-base mb-3 flex items-center gap-2">
+                        <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">Tahun {tahun}</span>
+                    </h2>
+                    <div className="divide-y divide-gray-50 border border-gray-100 rounded-xl overflow-hidden bg-white">
+                        {byTahun[tahun].map(item => (
+                            <a key={item.id} href={item.fileUrl} target="_blank" rel="noreferrer"
+                                className="flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50 transition-colors group">
+                                <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: item.fileType === 'excel' ? '#e8f5e9' : '#fef2f2' }}>
+                                    {item.fileType === 'excel' ? <FileSpreadsheet size={18} className="text-green-600" /> : <FileText size={18} className="text-red-500" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-gray-800 group-hover:text-red-600 transition-colors">{item.title}</p>
+                                    <p className="text-xs text-gray-400 uppercase mt-0.5">{item.fileType === 'excel' ? 'Excel' : 'PDF'}</p>
+                                </div>
+                                <Download size={16} className="text-gray-300 group-hover:text-red-600 transition-colors flex-shrink-0" />
+                            </a>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
 
 const ppidMenu = [
     { slug: 'profil', title: 'Profil PPID' },
@@ -175,6 +226,9 @@ const PPIDPage: React.FC = () => {
                                     <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
                                 </a>
                             </div>
+
+                        ) : activeSlug === 'data-anggaran' ? (
+                            <DataAnggaran />
 
                         ) : (
                             <div className="py-20 text-center">
