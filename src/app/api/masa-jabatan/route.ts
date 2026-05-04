@@ -1,13 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { verifyAuth, isAuthError } from '@/lib/auth';
+import { getOrSet, invalidateTags } from '@/lib/cache';
 
 export async function GET() {
-  const [list]: any = await db.query('SELECT * FROM masa_jabatan ORDER BY isAktif DESC, tahunMulai DESC');
-  for (const item of list) {
-    const [pimpinan] = await db.query('SELECT * FROM pimpinan WHERE masaJabatanId = ? ORDER BY `order` ASC', [item.id]);
-    item.pimpinan = pimpinan;
-  }
+  const list = await getOrSet(
+    'masa-jabatan:list',
+    ['masa-jabatan', 'pimpinan'],
+    async () => {
+      const [rows]: any = await db.query('SELECT * FROM masa_jabatan ORDER BY isAktif DESC, tahunMulai DESC');
+      for (const item of rows) {
+        const [pimpinan] = await db.query('SELECT * FROM pimpinan WHERE masaJabatanId = ? ORDER BY `order` ASC', [item.id]);
+        item.pimpinan = pimpinan;
+      }
+      return rows;
+    },
+    300,
+  );
   return NextResponse.json(list);
 }
 
@@ -29,5 +38,6 @@ export async function POST(req: NextRequest) {
     [id, periode, parseInt(tahunMulai), parseInt(tahunSelesai), isAktif === true || isAktif === 'true' ? 1 : 0, keterangan || null, order ? parseInt(order) : 0, now, now]
   );
   const [rows]: any = await db.query('SELECT * FROM masa_jabatan WHERE id = ?', [id]);
+  invalidateTags(['masa-jabatan']);
   return NextResponse.json(rows[0], { status: 201 });
 }

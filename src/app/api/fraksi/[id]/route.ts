@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import { verifyAuth, isAuthError } from '@/lib/auth';
 import { processFileUpload } from '@/lib/upload';
 import { deleteFromStorage } from '@/lib/storage';
+import { invalidateTags } from '@/lib/cache';
 
 async function getFraksiWithRelations(id: string) {
   const [rows]: any = await db.query(
@@ -47,6 +48,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       [name || existing.name, shortName || existing.shortName, slug || existing.slug, color || existing.color, kursi ? parseInt(kursi) : existing.kursi, masaJabatanId !== null ? (masaJabatanId || null) : existing.masaJabatanId, deskripsi !== null ? deskripsi : existing.deskripsi, logoUrl, isAktif !== null ? (isAktif === 'true' ? 1 : 0) : existing.isAktif, order ? parseInt(order) : existing.order, now, id]
     );
     const updated = await getFraksiWithRelations(id);
+    invalidateTags(['fraksi']);
     return NextResponse.json(updated);
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -63,5 +65,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (rows[0].logoUrl) await deleteFromStorage(rows[0].logoUrl);
   await db.query('DELETE FROM anggota_fraksi WHERE fraksiInfoId = ?', [id]);
   await db.query('DELETE FROM fraksi_info WHERE id = ?', [id]);
+  invalidateTags(['fraksi']);
   return NextResponse.json({ message: 'Fraksi berhasil dihapus.' });
 }

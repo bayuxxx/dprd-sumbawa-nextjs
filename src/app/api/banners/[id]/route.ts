@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import { verifyAuth, isAuthError } from '@/lib/auth';
 import { processFileUpload } from '@/lib/upload';
 import { deleteFromStorage } from '@/lib/storage';
+import { invalidateTags } from '@/lib/cache';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -32,6 +33,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const now = new Date();
     await db.query('UPDATE banners SET title = ?, imageUrl = ?, updatedAt = ? WHERE id = ?', [title || existing.title, imageUrl, now, id]);
     const [updated]: any = await db.query('SELECT * FROM banners WHERE id = ?', [id]);
+    invalidateTags(['banners']);
     return NextResponse.json(updated[0]);
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -47,5 +49,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (rows.length === 0) return NextResponse.json({ message: 'Banner tidak ditemukan.' }, { status: 404 });
   if (rows[0].imageUrl) await deleteFromStorage(rows[0].imageUrl);
   await db.query('DELETE FROM banners WHERE id = ?', [id]);
+  invalidateTags(['banners']);
   return NextResponse.json({ message: 'Banner berhasil dihapus.' });
 }

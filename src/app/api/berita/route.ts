@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { verifyAuth, isAuthError } from '@/lib/auth';
 import { processFileUpload } from '@/lib/upload';
+import { getOrSet, invalidateTags } from '@/lib/cache';
 
 function generateSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
@@ -24,17 +25,30 @@ export async function GET(req: NextRequest) {
   if (reviewStatus) { conditions.push('reviewStatus = ?'); params.push(reviewStatus); }
   if (search) { conditions.push('(title LIKE ? OR excerpt LIKE ? OR content LIKE ?)'); params.push(`%${search}%`, `%${search}%`, `%${search}%`); }
 
-  const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
-  const [countRows]: any = await db.query(`SELECT COUNT(*) as total FROM beritas ${where}`, params);
-  const total = countRows[0].total;
+  const cacheKey = `berita:list:${category}:${isPublished}:${reviewStatus}:${search}:${limit}:${page}`;
+  // Cache 60 detik untuk list berita (data non-admin); admin view tidak di-cache
+  const ttl = isPublished === 'true' && !search ? 60 : 0;
 
-  let sql = `SELECT b.*, a.username as authorName FROM beritas b LEFT JOIN admins a ON b.authorId = a.id ${where} ORDER BY b.publishedAt DESC`;
-  const queryParams = [...params];
-  if (limit) { sql += ' LIMIT ?'; queryParams.push(parseInt(limit)); }
-  if (page && limit) { sql += ' OFFSET ?'; queryParams.push((parseInt(page) - 1) * parseInt(limit)); }
+  const result = await getOrSet(
+    cacheKey,
+    ['berita'],
+    async () => {
+      const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+      const [countRows]: any = await db.query(`SELECT COUNT(*) as total FROM beritas ${where}`, params);
+      const total = countRows[0].total;
 
-  const [beritas] = await db.query(sql, queryParams);
-  return NextResponse.json({ data: beritas, total, page: page ? parseInt(page) : 1 });
+      let sql = `SELECT b.*, a.username as authorName FROM beritas b LEFT JOIN admins a ON b.authorId = a.id ${where} ORDER BY b.publishedAt DESC`;
+      const queryParams = [...params];
+      if (limit) { sql += ' LIMIT ?'; queryParams.push(parseInt(limit)); }
+      if (page && limit) { sql += ' OFFSET ?'; queryParams.push((parseInt(page) - 1) * parseInt(limit)); }
+
+      const [beritas] = await db.query(sql, queryParams);
+      return { data: beritas, total, page: page ? parseInt(page) : 1 };
+    },
+    ttl,
+  );
+
+  return NextResponse.json(result);
 }
 
 export async function POST(req: NextRequest) {
@@ -78,6 +92,7 @@ export async function POST(req: NextRequest) {
       [id, title, slug, excerpt || null, content || null, imageUrl, category || 'Berita Dewan', isPublished, auth.adminId, reviewStatus, pubDate, now, now]
     );
     const [rows]: any = await db.query('SELECT * FROM beritas WHERE id = ?', [id]);
+    invalidateTags(['berita']);
     return NextResponse.json(rows[0], { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });

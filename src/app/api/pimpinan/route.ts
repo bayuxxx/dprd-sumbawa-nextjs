@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { verifyAuth, isAuthError } from '@/lib/auth';
 import { processFileUpload } from '@/lib/upload';
+import { getOrSet, invalidateTags } from '@/lib/cache';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -14,17 +15,24 @@ export async function GET(req: NextRequest) {
   if (masaJabatanId) { conditions.push('p.masaJabatanId = ?'); params.push(masaJabatanId); }
 
   const where = conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
-  const [rows]: any = await db.query(
-    `SELECT p.*, m.id as mj_id, m.periode, m.tahunMulai, m.tahunSelesai, m.isAktif as mj_isAktif
-     FROM pimpinan p LEFT JOIN masa_jabatan m ON p.masaJabatanId = m.id
-     ${where} ORDER BY p.period DESC, p.\`order\` ASC`,
-    params
+  const cacheKey = `pimpinan:list:${isPast}:${masaJabatanId}`;
+  const pimpinan = await getOrSet(
+    cacheKey,
+    ['pimpinan'],
+    async () => {
+      const [rows]: any = await db.query(
+        `SELECT p.*, m.id as mj_id, m.periode, m.tahunMulai, m.tahunSelesai, m.isAktif as mj_isAktif
+         FROM pimpinan p LEFT JOIN masa_jabatan m ON p.masaJabatanId = m.id
+         ${where} ORDER BY p.period DESC, p.\`order\` ASC`,
+        params
+      );
+      return rows.map((r: any) => ({
+        ...r,
+        masaJabatan: r.mj_id ? { id: r.mj_id, periode: r.periode, tahunMulai: r.tahunMulai, tahunSelesai: r.tahunSelesai, isAktif: r.mj_isAktif } : null,
+      }));
+    },
+    120,
   );
-
-  const pimpinan = rows.map((r: any) => ({
-    ...r,
-    masaJabatan: r.mj_id ? { id: r.mj_id, periode: r.periode, tahunMulai: r.tahunMulai, tahunSelesai: r.tahunSelesai, isAktif: r.mj_isAktif } : null,
-  }));
   return NextResponse.json(pimpinan);
 }
 
@@ -60,6 +68,7 @@ export async function POST(req: NextRequest) {
       [id]
     );
     const r = rows[0];
+    invalidateTags(['pimpinan']);
     return NextResponse.json({ ...r, masaJabatan: r.mj_id ? { id: r.mj_id, periode: r.periode, tahunMulai: r.tahunMulai, tahunSelesai: r.tahunSelesai } : null }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });

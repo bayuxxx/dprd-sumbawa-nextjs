@@ -1,0 +1,82 @@
+services:
+  # ============================================================
+  # Next.js Application
+  # ============================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dprd-sumbawa-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    volumes:
+      # Persist uploaded files between deployments
+      - uploads_data:/app/uploads
+      - uploads_public:/app/public/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - dprd_network
+
+  # ============================================================
+  # MySQL Database
+  # ============================================================
+  db:
+    image: mysql:8.0
+    container_name: dprd-sumbawa-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"   # hapus baris ini di production jika tidak perlu akses langsung
+    networks:
+      - dprd_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ============================================================
+  # Nginx Reverse Proxy
+  # ============================================================
+  nginx:
+    image: nginx:alpine
+    container_name: dprd-sumbawa-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro        # SSL certificates
+      - uploads_public:/var/www/uploads:ro        # Serve uploads directly
+    depends_on:
+      - app
+    networks:
+      - dprd_network
+
+volumes:
+  mysql_data:
+    driver: local
+  uploads_data:
+    driver: local
+  uploads_public:
+    driver: local
+
+networks:
+  dprd_network:
+    driver: bridge

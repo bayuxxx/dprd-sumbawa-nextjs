@@ -13,6 +13,9 @@ dist/
 .env.development
 .env.production
 
+# Docker secrets — jangan commit!
+nginx/certs/
+
 # Prisma
 prisma/migrations/
 prisma/*.db

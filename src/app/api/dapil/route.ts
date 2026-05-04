@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { verifyAuth, isAuthError } from '@/lib/auth';
 import { processFileUpload } from '@/lib/upload';
+import { getOrSet, invalidateTags } from '@/lib/cache';
 
 async function getDapilWithAnggota(id: string) {
   const [rows]: any = await db.query('SELECT * FROM daerah_pemilihan WHERE id = ?', [id]);
@@ -11,11 +12,18 @@ async function getDapilWithAnggota(id: string) {
 }
 
 export async function GET() {
-  const [list]: any = await db.query('SELECT * FROM daerah_pemilihan ORDER BY isAktif DESC, `order` ASC');
-  const result = await Promise.all(list.map(async (r: any) => {
-    const [anggota] = await db.query('SELECT * FROM anggota_dapil WHERE dapilId = ? ORDER BY `order` ASC', [r.id]);
-    return { ...r, anggota };
-  }));
+  const result = await getOrSet(
+    'dapil:list',
+    ['dapil'],
+    async () => {
+      const [list]: any = await db.query('SELECT * FROM daerah_pemilihan ORDER BY isAktif DESC, `order` ASC');
+      return Promise.all(list.map(async (r: any) => {
+        const [anggota] = await db.query('SELECT * FROM anggota_dapil WHERE dapilId = ? ORDER BY `order` ASC', [r.id]);
+        return { ...r, anggota };
+      }));
+    },
+    120,
+  );
   return NextResponse.json(result);
 }
 
@@ -46,6 +54,7 @@ export async function POST(req: NextRequest) {
       [id, nama, slug, wilayah || null, jumlahKursi ? parseInt(jumlahKursi) : 0, imageUrl, deskripsi || null, isAktif === 'true' ? 1 : 0, order ? parseInt(order) : 0, now, now]
     );
     const item = await getDapilWithAnggota(id);
+    invalidateTags(['dapil']);
     return NextResponse.json(item, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });

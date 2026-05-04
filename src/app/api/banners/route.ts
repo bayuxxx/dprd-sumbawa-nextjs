@@ -2,17 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { verifyAuth, isAuthError } from '@/lib/auth';
 import { processFileUpload } from '@/lib/upload';
+import { getOrSet, invalidateTags } from '@/lib/cache';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const isActive = searchParams.get('isActive');
 
-  let sql = 'SELECT * FROM banners';
-  const params: any[] = [];
-  if (isActive !== null) { sql += ' WHERE isActive = ?'; params.push(isActive === 'true' ? 1 : 0); }
-  sql += ' ORDER BY `order` ASC';
-
-  const [banners] = await db.query(sql, params);
+  const cacheKey = `banners:list:${isActive}`;
+  const banners = await getOrSet(
+    cacheKey,
+    ['banners'],
+    async () => {
+      let sql = 'SELECT * FROM banners';
+      const params: any[] = [];
+      if (isActive !== null) { sql += ' WHERE isActive = ?'; params.push(isActive === 'true' ? 1 : 0); }
+      sql += ' ORDER BY `order` ASC';
+      const [rows] = await db.query(sql, params);
+      return rows;
+    },
+    120,
+  );
   return NextResponse.json(banners);
 }
 
@@ -36,6 +45,7 @@ export async function POST(req: NextRequest) {
       [id, title, 'Berita Dewan', imageUrl, now, now]
     );
     const [rows]: any = await db.query('SELECT * FROM banners WHERE id = ?', [id]);
+    invalidateTags(['banners']);
     return NextResponse.json(rows[0], { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });

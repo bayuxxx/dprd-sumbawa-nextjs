@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import { verifyAuth, isAuthError } from '@/lib/auth';
 import { processFileUpload } from '@/lib/upload';
 import { deleteFromStorage } from '@/lib/storage';
+import { invalidateTags } from '@/lib/cache';
 
 async function getPimpinanWithMJ(id: string) {
   const [rows]: any = await db.query(
@@ -54,6 +55,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       [name || existing.name, position || existing.position, faction !== undefined ? faction : existing.faction, period || existing.period, masaJabatanId !== undefined ? (masaJabatanId || null) : existing.masaJabatanId, isPast !== undefined ? (isPast === 'true' ? 1 : 0) : existing.isPast, imageUrl, bio !== undefined ? bio : existing.bio, order !== undefined ? parseInt(order) : existing.order, now, id]
     );
     const updated = await getPimpinanWithMJ(id);
+    invalidateTags(['pimpinan']);
     return NextResponse.json(updated);
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -69,5 +71,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   if (rows.length === 0) return NextResponse.json({ message: 'Data pimpinan tidak ditemukan.' }, { status: 404 });
   if (rows[0].imageUrl) await deleteFromStorage(rows[0].imageUrl);
   await db.query('DELETE FROM pimpinan WHERE id = ?', [id]);
+  invalidateTags(['pimpinan']);
   return NextResponse.json({ message: 'Data pimpinan berhasil dihapus.' });
 }

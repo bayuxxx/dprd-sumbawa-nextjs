@@ -3,6 +3,7 @@ import db from '@/lib/db';
 import { verifyAuth, isAuthError, hasPermission } from '@/lib/auth';
 import { processFileUpload } from '@/lib/upload';
 import { deleteFromStorage } from '@/lib/storage';
+import { invalidateTags } from '@/lib/cache';
 
 function generateSlug(title: string): string {
   return title.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
@@ -87,6 +88,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ idOr
       ]
     );
     const [updated]: any = await db.query('SELECT * FROM beritas WHERE id = ?', [id]);
+    invalidateTags(['berita']);
     return NextResponse.json(updated[0]);
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
@@ -114,5 +116,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   if (rows[0].imageUrl) await deleteFromStorage(rows[0].imageUrl);
   await db.query('DELETE FROM beritas WHERE id = ?', [id]);
+  invalidateTags(['berita']);
   return NextResponse.json({ message: 'Berita berhasil dihapus.' });
 }

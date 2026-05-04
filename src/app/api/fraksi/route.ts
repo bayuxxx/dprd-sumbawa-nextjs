@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 import { verifyAuth, isAuthError } from '@/lib/auth';
 import { processFileUpload } from '@/lib/upload';
+import { getOrSet, invalidateTags } from '@/lib/cache';
 
 async function getFraksiWithRelations(id: string) {
   const [rows]: any = await db.query(
@@ -14,11 +15,18 @@ async function getFraksiWithRelations(id: string) {
 }
 
 export async function GET() {
-  const [list]: any = await db.query('SELECT f.*, m.id as mj_id, m.periode FROM fraksi_info f LEFT JOIN masa_jabatan_fraksi m ON f.masaJabatanId = m.id ORDER BY f.isAktif DESC, f.`order` ASC');
-  const result = await Promise.all(list.map(async (r: any) => {
-    const [anggota] = await db.query('SELECT * FROM anggota_fraksi WHERE fraksiInfoId = ? ORDER BY `order` ASC', [r.id]);
-    return { ...r, masaJabatan: r.mj_id ? { id: r.mj_id, periode: r.periode } : null, anggota };
-  }));
+  const result = await getOrSet(
+    'fraksi:list',
+    ['fraksi'],
+    async () => {
+      const [list]: any = await db.query('SELECT f.*, m.id as mj_id, m.periode FROM fraksi_info f LEFT JOIN masa_jabatan_fraksi m ON f.masaJabatanId = m.id ORDER BY f.isAktif DESC, f.`order` ASC');
+      return Promise.all(list.map(async (r: any) => {
+        const [anggota] = await db.query('SELECT * FROM anggota_fraksi WHERE fraksiInfoId = ? ORDER BY `order` ASC', [r.id]);
+        return { ...r, masaJabatan: r.mj_id ? { id: r.mj_id, periode: r.periode } : null, anggota };
+      }));
+    },
+    120,
+  );
   return NextResponse.json(result);
 }
 
@@ -62,6 +70,7 @@ export async function POST(req: NextRequest) {
       [id, name, shortName, slug, color || '#c8102e', kursi ? parseInt(kursi) : 0, masaJabatanId || null, deskripsi || null, logoUrl, isAktif === undefined ? 1 : (isAktif === 'true' ? 1 : 0), order ? parseInt(order) : 0, now, now]
     );
     const item = await getFraksiWithRelations(id);
+    invalidateTags(['fraksi']);
     return NextResponse.json(item, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ message: error.message }, { status: 500 });
