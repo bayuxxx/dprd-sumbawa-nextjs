@@ -21,10 +21,6 @@ prisma/migrations/
 prisma/*.db
 prisma/*.db-journal
 
-# Uploads (managed separately)
-uploads/
-public/uploads/
-
 # Logs
 *.log
 npm-debug.log*
