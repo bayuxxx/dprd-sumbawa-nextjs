@@ -11,8 +11,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# Install all deps (needed for prisma generate)
-RUN npm ci
+# Install all deps (npm install lebih toleran terhadap lock file yang tidak sync)
+RUN npm install
 
 # Generate Prisma Client for Linux target
 RUN npx prisma generate
@@ -58,7 +58,7 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
 
 # Install production dependencies only
-RUN npm ci --omit=dev && npm cache clean --force
+RUN npm install --omit=dev && npm cache clean --force
 
 # Copy Prisma schema and generated client
 COPY --from=builder /app/prisma ./prisma/
